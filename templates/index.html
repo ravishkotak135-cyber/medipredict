@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediPredict — Disease Prediction System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#050810;--bg2:#0c1120;--bg3:#111827;--bg4:#1a2235;
+  --accent:#4f8ef7;--accent2:#7eb3ff;--accent3:#2563eb;
+  --green:#22c55e;--red:#f43f5e;--amber:#fbbf24;--purple:#a78bfa;--orange:#fb923c;
+  --text:#f0f4ff;--text2:#8fa3c0;--text3:#4a6080;
+  --border:rgba(79,142,247,0.1);--border2:rgba(79,142,247,0.2);
+  --card:rgba(12,17,32,0.9);
+  --glow:rgba(79,142,247,0.15);
+  --font:'Inter',sans-serif;--font2:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(37,99,235,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(79,142,247,0.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+.hidden{display:none!important;}
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
+.auth-box{background:rgba(12,17,32,0.95);border:1px solid var(--border2);border-radius:24px;padding:48px 44px;width:440px;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(79,142,247,0.08),0 24px 48px rgba(0,0,0,0.4);}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:36px;justify-content:center;}
+.auth-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(37,99,235,0.4);}
+.auth-logo-icon svg{width:22px;height:22px;fill:white;}
+.auth-logo-text{font-family:var(--font2);font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.auth-title{font-family:var(--font2);font-size:28px;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:-0.5px;}
+.auth-sub{color:var(--text2);font-size:14px;text-align:center;margin-bottom:32px;}
+.auth-tabs{display:flex;background:var(--bg3);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px;}
+.auth-tab{flex:1;padding:10px;text-align:center;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all 0.2s;font-family:var(--font2);}
+.auth-tab.active{background:var(--accent3);color:white;box-shadow:0 0 16px rgba(37,99,235,0.4);}
+.field-group{margin-bottom:16px;}
+.field-label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;font-weight:500;letter-spacing:0.3px;}
+.field-input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:all 0.2s;}
+.field-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.1);}
+.field-input::placeholder{color:var(--text3);}
+.auth-btn{width:100%;background:linear-gradient(135deg,#2563eb,#7c3aed);border:none;border-radius:12px;padding:14px;color:white;font-family:var(--font2);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:8px;letter-spacing:0.3px;box-shadow:0 0 24px rgba(37,99,235,0.3);}
+.auth-btn:hover{transform:translateY(-1px);box-shadow:0 0 32px rgba(37,99,235,0.5);}
+.auth-demo{text-align:center;margin-top:20px;font-size:13px;color:var(--text3);}
+.auth-demo span{color:var(--accent2);cursor:pointer;}
+.auth-demo span:hover{text-decoration:underline;}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;position:relative;z-index:1;}
+.sidebar{width:250px;background:rgba(12,17,32,0.95);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:100;backdrop-filter:blur(20px);}
+.sidebar-logo{padding:28px 20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.sidebar-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(37,99,235,0.35);}
+.sidebar-logo-icon svg{width:18px;height:18px;fill:white;}
+.sidebar-logo-text{font-family:var(--font2);font-size:18px;font-weight:700;letter-spacing:-0.3px;}
+.nav-section{padding:20px 16px 8px;font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:12px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;margin:2px 10px;transition:all 0.18s;}
+.nav-item:hover{background:rgba(79,142,247,0.08);color:var(--text);}
+.nav-item.active{background:rgba(79,142,247,0.12);color:var(--accent2);border:1px solid rgba(79,142,247,0.15);}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;}
+.sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(79,142,247,0.06);border:1px solid var(--border);}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0;font-family:var(--font2);}
+.user-info{flex:1;overflow:hidden;}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:11px;color:var(--text3);}
+.logout-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;line-height:0;transition:color 0.2s;}
+.logout-btn:hover{color:var(--red);}
+.logout-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+.main{flex:1;margin-left:250px;min-height:100vh;}
+.topbar{background:rgba(12,17,32,0.8);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);}
+.topbar-title{font-family:var(--font2);font-size:18px;font-weight:700;letter-spacing:-0.3px;}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:20px;padding:6px 12px;}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.badge-live{font-size:12px;color:var(--green);font-weight:600;}
+.content{padding:32px;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;overflow:hidden;backdrop-filter:blur(10px);transition:border-color 0.2s;}
+.stat-card:hover{border-color:var(--border2);}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;}
+.stat-card.blue::after{background:linear-gradient(90deg,#2563eb,#6366f1);}
+.stat-card.green::after{background:linear-gradient(90deg,#22c55e,#06b6d4);}
+.stat-card.amber::after{background:linear-gradient(90deg,#fbbf24,#f43f5e);}
+.stat-card.purple::after{background:linear-gradient(90deg,#a78bfa,#ec4899);}
+.stat-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.stat-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;}
+.stat-icon.blue{background:rgba(37,99,235,0.12);color:#4f8ef7;}
+.stat-icon.green{background:rgba(34,197,94,0.12);color:#22c55e;}
+.stat-icon.amber{background:rgba(251,191,36,0.12);color:#fbbf24;}
+.stat-icon.purple{background:rgba(167,139,250,0.12);color:#a78bfa;}
+.stat-value{font-family:var(--font2);font-size:30px;font-weight:700;letter-spacing:-1px;}
+.stat-label{font-size:12px;color:var(--text2);margin-top:4px;font-weight:500;}
+.stat-change{font-size:12px;margin-top:10px;}
+.stat-change.up{color:var(--green);}
+.stat-change.dn{color:var(--red);}
+.stat-change.nt{color:var(--text3);}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px;}
+.charts-row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(10px);}
+.chart-title{font-family:var(--font2);font-size:15px;font-weight:700;margin-bottom:4px;letter-spacing:-0.2px;}
+.chart-sub{font-size:12px;color:var(--text3);margin-bottom:20px;}
+
+/* ── TABLE ── */
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:24px;backdrop-filter:blur(10px);}
+.table-head{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.table-title{font-family:var(--font2);font-size:15px;font-weight:700;letter-spacing:-0.2px;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{background:rgba(79,142,247,0.05);padding:12px 20px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+td{padding:13px 20px;font-size:13px;border-top:1px solid var(--border);white-space:nowrap;}
+tr:hover td{background:rgba(79,142,247,0.03);}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-pos{background:rgba(244,63,94,0.12);color:#f43f5e;}
+.badge-pre{background:rgba(251,191,36,0.12);color:#fbbf24;}
+.badge-neg{background:rgba(34,197,94,0.12);color:#22c55e;}
+.table-pager{display:flex;align-items:center;gap:12px;padding:16px 22px;border-top:1px solid var(--border);}
+.page-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 16px;color:var(--text2);cursor:pointer;font-size:13px;font-family:var(--font);font-weight:500;transition:all 0.2s;}
+.page-btn:hover:not(:disabled){color:var(--text);border-color:var(--accent);}
+.page-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.page-info{font-size:13px;color:var(--text3);}
+
+/* ── PREDICT PAGE ── */
+.predict-wrap{max-width:960px;}
+.page-header{margin-bottom:28px;}
+.page-header h2{font-family:var(--font2);font-size:24px;font-weight:700;margin-bottom:8px;letter-spacing:-0.5px;}
+.page-header p{color:var(--text2);font-size:14px;line-height:1.6;}
+.model-info-bar{display:flex;align-items:center;gap:14px;padding:14px 20px;background:rgba(79,142,247,0.06);border:1px solid var(--border2);border-radius:12px;margin-bottom:24px;font-size:13px;color:var(--text2);}
+.model-info-bar svg{width:16px;height:16px;stroke:var(--accent2);fill:none;stroke-width:2;flex-shrink:0;}
+.model-info-bar strong{color:var(--accent2);}
+
+/* ── FORM CARD ── */
+.predict-form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;backdrop-filter:blur(10px);}
+.form-section-title{font-family:var(--font2);font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--border);letter-spacing:1px;text-transform:uppercase;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px;}
+.form-grid.two{grid-template-columns:1fr 1fr;}
+.form-field label{display:block;font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px;letter-spacing:0.2px;}
+.form-field select,.form-field input[type=number]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:all 0.2s;-webkit-appearance:none;}
+.form-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a6080' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:32px;}
+.form-field select:focus,.form-field input[type=number]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.1);}
+.form-field input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
+.predict-btn{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);border:none;border-radius:12px;padding:14px 36px;color:white;font-family:var(--font2);font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;box-shadow:0 0 28px rgba(37,99,235,0.3);}
+.predict-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 40px rgba(37,99,235,0.5);}
+.predict-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.predict-btn svg{width:18px;height:18px;stroke:white;fill:none;stroke-width:2.5;}
+
+/* ── RESULT CARD ── */
+.result-card{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:32px;margin-bottom:24px;backdrop-filter:blur(10px);animation:slideUp 0.4s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.result-header{display:flex;align-items:center;gap:28px;margin-bottom:32px;padding-bottom:28px;border-bottom:1px solid var(--border);}
+.result-circle{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;border:3px solid;position:relative;}
+.result-circle::before{content:'';position:absolute;inset:-8px;border-radius:50%;opacity:0.15;}
+.result-circle.green{border-color:var(--green);}
+.result-circle.green::before{background:var(--green);}
+.result-circle.amber{border-color:var(--amber);}
+.result-circle.amber::before{background:var(--amber);}
+.result-circle.orange{border-color:var(--orange);}
+.result-circle.orange::before{background:var(--orange);}
+.result-circle.red{border-color:var(--red);}
+.result-circle.red::before{background:var(--red);}
+.result-pct{font-family:var(--font2);font-size:24px;font-weight:700;line-height:1;letter-spacing:-1px;}
+.result-pct-label{font-size:10px;color:var(--text3);margin-top:3px;font-weight:500;}
+.result-info h3{font-family:var(--font2);font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;}
+.result-info p{color:var(--text2);font-size:13px;line-height:1.6;}
+.result-badge{display:inline-flex;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;font-family:var(--font2);letter-spacing:0.3px;}
+.result-badge.green{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.2);}
+.result-badge.amber{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2);}
+.result-badge.orange{background:rgba(251,146,60,0.12);color:var(--orange);border:1px solid rgba(251,146,60,0.2);}
+.result-badge.red{background:rgba(244,63,94,0.12);color:var(--red);border:1px solid rgba(244,63,94,0.2);}
+.factors-title{font-family:var(--font2);font-size:12px;font-weight:700;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;}
+.factors-grid{display:grid;gap:12px;}
+.factor-row{display:flex;align-items:center;gap:14px;}
+.factor-name{font-size:13px;color:var(--text2);width:200px;flex-shrink:0;font-weight:500;}
+.factor-bar-wrap{flex:1;background:var(--bg3);border-radius:6px;height:8px;overflow:hidden;}
+.factor-bar{height:100%;border-radius:6px;background:linear-gradient(90deg,#2563eb,#7c3aed);transition:width 0.8s ease;}
+.factor-pct{font-size:12px;color:var(--text3);width:44px;text-align:right;font-family:var(--font2);font-weight:600;}
+
+/* ── CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 130px);max-width:860px;}
+.chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;}
+.chat-msg{display:flex;gap:12px;animation:slideUp 0.3s ease;}
+.chat-msg.user{flex-direction:row-reverse;}
+.chat-bubble{max-width:75%;padding:14px 18px;border-radius:16px;font-size:14px;line-height:1.6;}
+.chat-msg.ai .chat-bubble{background:var(--bg3);border:1px solid var(--border);border-radius:4px 16px 16px 16px;}
+.chat-msg.user .chat-bubble{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border-radius:16px 4px 16px 16px;}
+.chat-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;font-family:var(--font2);}
+.chat-msg.ai .chat-avatar{background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;}
+.chat-msg.user .chat-avatar{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);}
+.chat-input-wrap{padding:20px 24px;border-top:1px solid var(--border);display:flex;gap:12px;background:rgba(12,17,32,0.8);backdrop-filter:blur(10px);}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;resize:none;transition:border-color 0.2s;}
+.chat-input:focus{border-color:var(--accent);}
+.chat-send-btn{background:linear-gradient(135deg,#2563eb,#7c3aed);border:none;border-radius:12px;padding:12px 20px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;}
+.chat-send-btn:hover{transform:scale(1.05);}
+.chat-send-btn svg{width:18px;height:18px;stroke:white;fill:none;stroke-width:2.5;}
+.chat-empty{text-align:center;padding:60px 40px;color:var(--text3);}
+.chat-empty-icon{width:64px;height:64px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+.chat-empty-icon svg{width:30px;height:30px;stroke:var(--text3);fill:none;stroke-width:1.5;}
+.chat-empty h3{font-family:var(--font2);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+.chat-empty p{font-size:14px;line-height:1.6;max-width:360px;margin:0 auto;}
+.typing-indicator{display:flex;gap:4px;padding:4px 0;}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:typing 1.4s infinite;}
+.typing-dot:nth-child(2){animation-delay:0.2s;}
+.typing-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════ AUTH ══════════ -->
+<div class="auth-wrap" id="authPage">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 8H4l4 4-2 6 6-3 6 3-2-6 4-4h-4z"/></svg></div>
+      <span class="auth-logo-text">MediPredict</span>
+    </div>
+    <div class="auth-title" id="authTitle">Welcome back</div>
+    <div class="auth-sub" id="authSub">Sign in to your clinical dashboard</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+    <div class="field-group hidden" id="nameField">
+      <label class="field-label">Full Name</label>
+      <input class="field-input" type="text" id="nameInput" placeholder="Dr. Jane Smith">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Email Address</label>
+      <input class="field-input" type="email" id="emailInput" placeholder="doctor@hospital.com">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Password</label>
+      <input class="field-input" type="password" id="passInput" placeholder="••••••••">
+    </div>
+    <div class="field-group hidden" id="roleField">
+      <label class="field-label">Role</label>
+      <select class="field-input" id="roleInput">
+        <option>Physician</option><option>Specialist</option><option>Researcher</option><option>Data Analyst</option>
+      </select>
+    </div>
+    <button class="auth-btn" id="authSubmit" onclick="handleAuth()">Sign In</button>
+    <div class="auth-demo">Demo access: <span onclick="demoLogin()">enter as guest →</span></div>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div class="app hidden" id="appPage">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 8H4l4 4-2 6 6-3 6 3-2-6 4-4h-4z"/></svg></div>
+      <span class="sidebar-logo-text">MediPredict</span>
+    </div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('analytics',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>Analytics
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="showPage('predict',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>Predict Disease
+    </div>
+    <div class="nav-item" onclick="showPage('chatbot',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Medical Assistant
+    </div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" onclick="showPage('patients',this)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Patients
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebarAvatar">DR</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Dr. User</div>
+          <div class="user-role" id="sidebarRole">Physician</div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard Overview</div>
+        <div class="topbar-sub" id="topbarSub">BRFSS 2015 — CDC Diabetes Health Indicators · 253,680 records</div>
+      </div>
+      <div class="live-badge">
+        <div class="badge-dot"></div>
+        <span class="badge-live">Live Data</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div id="dashboardPage">
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+            <div class="stat-value" id="sv-total">—</div>
+            <div class="stat-label">Total Records</div>
+            <div class="stat-change nt">BRFSS 2015 · CDC dataset</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon green"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
+            <div class="stat-value" id="sv-pos">—</div>
+            <div class="stat-label">Diabetic / Pre-diabetic</div>
+            <div class="stat-change up" id="sv-prev">—</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-icon amber"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <div class="stat-value" id="sv-bmi">—</div>
+            <div class="stat-label">Average BMI</div>
+            <div class="stat-change dn">Population average</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon purple"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="stat-value" id="sv-acc">—</div>
+            <div class="stat-label">Model Accuracy</div>
+            <div class="stat-change up">Random Forest · 100 trees</div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title">BMI Distribution by Outcome</div>
+            <div class="chart-sub">Body mass index across diabetic vs non-diabetic patients</div>
+            <div style="position:relative;height:240px;"><canvas id="bmiChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Diabetes Prevalence</div>
+            <div class="chart-sub">Positive vs negative outcomes in dataset</div>
+            <div style="position:relative;height:240px;"><canvas id="outcomeChart"></canvas></div>
+          </div>
+        </div>
+        <div class="charts-row2">
+          <div class="chart-card">
+            <div class="chart-title">Diabetes Rate by Age Group</div>
+            <div class="chart-sub">Prevalence % and average BMI per age cohort</div>
+            <div style="position:relative;height:220px;"><canvas id="ageChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">General Health Distribution</div>
+            <div class="chart-sub">Self-reported health status (1=Excellent → 5=Poor)</div>
+            <div style="position:relative;height:220px;"><canvas id="genhlthChart"></canvas></div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-head">
+            <div class="table-title">Recent Patient Records</div>
+            <span style="font-size:12px;color:var(--text3);">Showing first 15 records</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Age</th><th>Sex</th><th>BMI</th><th>High BP</th><th>High Chol</th><th>Smoker</th><th>Phys Activity</th><th>Gen Health</th><th>Outcome</th></tr></thead>
+              <tbody id="dashTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ANALYTICS ══ -->
+      <div id="analyticsPage" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon blue"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="stat-value" id="an-bmi-d">—</div><div class="stat-label">Avg BMI (Diabetic)</div><div class="stat-change nt" id="an-bmi-n">vs — non-diabetic</div></div>
+          <div class="stat-card green"><div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div><div class="stat-value" id="an-bp-d">—</div><div class="stat-label">High BP (Diabetic %)</div><div class="stat-change nt" id="an-bp-n">vs — non-diabetic</div></div>
+          <div class="stat-card amber"><div class="stat-icon amber"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="stat-value" id="an-chol-d">—</div><div class="stat-label">High Chol (Diabetic %)</div><div class="stat-change nt" id="an-chol-n">vs — non-diabetic</div></div>
+          <div class="stat-card purple"><div class="stat-icon purple"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div><div class="stat-value" id="an-age-d">—</div><div class="stat-label">Avg Age Code (Diabetic)</div><div class="stat-change nt" id="an-age-n">vs — non-diabetic</div></div>
+        </div>
+        <div class="charts-row2">
+          <div class="chart-card">
+            <div class="chart-title">Feature Importance (Random Forest)</div>
+            <div class="chart-sub">Top 8 predictors ranked by model importance score</div>
+            <div style="position:relative;height:280px;"><canvas id="corrChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Risk Factor Comparison</div>
+            <div class="chart-sub">% prevalence — diabetic vs non-diabetic</div>
+            <div style="position:relative;height:280px;"><canvas id="riskChart"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-bottom:24px;">
+          <div class="chart-title">Multi-feature Risk Profile</div>
+          <div class="chart-sub">Normalized average values — diabetic vs non-diabetic across key features</div>
+          <div style="position:relative;height:340px;"><canvas id="radarChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ══ PREDICT ══ -->
+      <div id="predictPage" class="hidden">
+        <div class="predict-wrap">
+          <div class="page-header">
+            <h2>Disease Prediction Engine</h2>
+            <p>Enter patient health indicators below. The trained Random Forest model will assess diabetes risk based on 21 clinical features from the CDC BRFSS 2015 dataset.</p>
+          </div>
+          <div class="model-info-bar">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Random Forest · 100 estimators · 80,000 training records · Accuracy: <strong id="formAccuracy">loading...</strong></span>
+          </div>
+          <div class="predict-form-card">
+            <div class="form-section-title">Physical Health Indicators</div>
+            <div class="form-grid">
+              <div class="form-field"><label>High Blood Pressure</label><select id="f_HighBP"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="form-field"><label>High Cholesterol</label><select id="f_HighChol"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="form-field"><label>Cholesterol Check (past 5yr)</label><select id="f_CholCheck"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="form-field"><label>BMI</label><input type="number" id="f_BMI" value="27" min="10" max="100" step="0.1"></div>
+              <div class="form-field"><label>Smoker (100+ cigarettes ever)</label><select id="f_Smoker"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="form-field"><label>History of Stroke</label><select id="f_Stroke"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="form-field"><label>Heart Disease / Attack</label><select id="f_HeartDiseaseorAttack"><option value="0">No</option><option value="1">Yes</option></select></div>
+              <div class="form-field"><label>Physical Activity (past 30 days)</label><select id="f_PhysActivity"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="form-field"><label>Difficulty Walking / Climbing Stairs</label><select id="f_DiffWalk"><option value="0">No</option><option value="1">Yes</option></select></div>
+            </div>
+            <div class="form-section-title">Lifestyle & Diet</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Fruit Consumption (1+ times/day)</label><select id="f_Fruits"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="form-field"><label>Vegetable Consumption (1+ times/day)</label><select id="f_Veggies"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="form-field"><label>Heavy Alcohol Consumption</label><select id="f_HvyAlcoholConsump"><option value="0">No</option><option value="1">Yes</option></select></div>
+            </div>
+            <div class="form-section-title">Healthcare Access</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Any Healthcare Coverage</label><select id="f_AnyHealthcare"><option value="1">Yes</option><option value="0">No</option></select></div>
+              <div class="form-field"><label>Avoided Doctor Due to Cost</label><select id="f_NoDocbcCost"><option value="0">No</option><option value="1">Yes</option></select></div>
+            </div>
+            <div class="form-section-title">General Well-being</div>
+            <div class="form-grid">
+              <div class="form-field"><label>General Health (1=Excellent, 5=Poor)</label><select id="f_GenHlth"><option value="1">1 — Excellent</option><option value="2">2 — Very Good</option><option value="3" selected>3 — Good</option><option value="4">4 — Fair</option><option value="5">5 — Poor</option></select></div>
+              <div class="form-field"><label>Mental Health Poor Days (past 30)</label><input type="number" id="f_MentHlth" value="0" min="0" max="30"></div>
+              <div class="form-field"><label>Physical Health Poor Days (past 30)</label><input type="number" id="f_PhysHlth" value="0" min="0" max="30"></div>
+            </div>
+            <div class="form-section-title">Demographics</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Sex</label><select id="f_Sex"><option value="0">Female</option><option value="1">Male</option></select></div>
+              <div class="form-field"><label>Age Group</label><select id="f_Age"><option value="1">18–24</option><option value="2">25–29</option><option value="3">30–34</option><option value="4">35–39</option><option value="5">40–44</option><option value="6">45–49</option><option value="7" selected>50–54</option><option value="8">55–59</option><option value="9">60–64</option><option value="10">65–69</option><option value="11">70–74</option><option value="12">75–79</option><option value="13">80+</option></select></div>
+              <div class="form-field"><label>Education Level</label><select id="f_Education"><option value="1">1 — Never attended school</option><option value="2">2 — Grades 1–8</option><option value="3">3 — Grades 9–11</option><option value="4">4 — Grade 12 / GED</option><option value="5" selected>5 — Some college</option><option value="6">6 — College graduate</option></select></div>
+              <div class="form-field"><label>Income Level</label><select id="f_Income"><option value="1">1 — &lt; $10,000</option><option value="2">2 — $10–15k</option><option value="3">3 — $15–20k</option><option value="4">4 — $20–25k</option><option value="5">5 — $25–35k</option><option value="6" selected>6 — $35–50k</option><option value="7">7 — $50–75k</option><option value="8">8 — &gt; $75,000</option></select></div>
+            </div>
+            <button class="predict-btn" id="predictBtn" onclick="runPrediction()">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+              Run Prediction
+            </button>
+          </div>
+          <div class="result-card hidden" id="resultCard">
+            <div class="result-header">
+              <div class="result-circle" id="resultCircle">
+                <div class="result-pct" id="resultPct">—</div>
+                <div class="result-pct-label">risk %</div>
+              </div>
+              <div class="result-info">
+                <h3 id="resultTitle">—</h3>
+                <p id="resultSub">—</p>
+                <div class="result-badge" id="resultBadge">—</div>
+              </div>
+            </div>
+            <div class="factors-title">Top Contributing Factors</div>
+            <div class="factors-grid" id="factorsGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CHATBOT ══ -->
+      <div id="chatbotPage" class="hidden">
+        <div class="page-header">
+          <h2>Medical Assistant</h2>
+          <p>Conversational clinical decision support</p>
+        </div>
+        <div class="table-card" style="display:flex;flex-direction:column;height:calc(100vh - 220px);">
+          <div id="chatMessagesWrap" class="chat-messages">
+            <div class="chat-empty" id="chatEmpty">
+              <div class="chat-empty-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+              <h3>Medical Assistant</h3>
+              <p>Ask questions about diabetes risk factors, symptoms, lifestyle changes, or the dataset.</p>
+            </div>
+          </div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask about diabetes risk factors, symptoms, or patient data..." onkeydown="handleChatKey(event)"></textarea>
+            <button class="chat-send-btn" onclick="sendChat()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PATIENTS ══ -->
+      <div id="patientsPage" class="hidden">
+        <div class="table-card">
+          <div class="table-head">
+            <div class="table-title">Full Patient Registry</div>
+            <span style="font-size:12px;color:var(--text3);">BRFSS 2015 · 253,680 records</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Age</th><th>Sex</th><th>BMI</th><th>High BP</th><th>High Chol</th><th>Smoker</th><th>Phys Activity</th><th>Gen Health</th><th>Outcome</th></tr></thead>
+              <tbody id="fullTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-pager">
+            <button class="page-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+            <span class="page-info" id="pageInfo">Page 1</span>
+            <button class="page-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let authMode = 'login';
+let dashInited = false, analyticsInited = false;
+let currentPage = 1;
+const PER_PAGE = 20;
+
+function switchTab(m) {
+  authMode = m;
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active',(i===0&&m==='login')||(i===1&&m==='signup')));
+  document.getElementById('nameField').classList.toggle('hidden', m!=='signup');
+  document.getElementById('roleField').classList.toggle('hidden', m!=='signup');
+  document.getElementById('authTitle').textContent = m==='login'?'Welcome back':'Create account';
+  document.getElementById('authSub').textContent = m==='login'?'Sign in to your clinical dashboard':'Join the MediPredict platform';
+  document.getElementById('authSubmit').textContent = m==='login'?'Sign In':'Create Account';
+}
+async function handleAuth() {
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passInput').value;
+  const name = document.getElementById('nameInput').value;
+  const role = document.getElementById('roleInput').value;
+
+  let url = authMode === 'login' ? '/api/login' : '/api/signup';
+
+  let payload = authMode === 'login'
+    ? { email, password }
+    : { name, email, password, role };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    alert(data.message || "Error");
+    return;
+  }
+
+  if (authMode === 'signup') {
+    alert("Signup successful! Now login.");
+    switchTab('login');
+    return;
+  }
+
+  doLogin(data.user.name, data.user.email, data.user.role);
+}
+
+async function demoLogin() { await doLogin('Dr. Demo User','demo@medipredict.io','Physician'); }
+async function doLogin(name, email, role) {
+  const initials = name.split(' ').filter(w=>/[A-Z]/i.test(w[0])).map(w=>w[0].toUpperCase()).join('').slice(0,2)||'DR';
+  document.getElementById('sidebarAvatar').textContent = initials;
+  document.getElementById('sidebarName').textContent = name;
+  document.getElementById('sidebarRole').textContent = role;
+  document.getElementById('authPage').classList.add('hidden');
+  document.getElementById('appPage').classList.remove('hidden');
+  loadStats();
+  setTimeout(initDashCharts, 200);
+}
+async function logout() {
+  try { await fetch('/api/logout',{method:'POST'}); } catch(e){}
+  document.getElementById('appPage').classList.add('hidden');
+  document.getElementById('authPage').classList.remove('hidden');
+  dashInited = analyticsInited = false;
+}
+
+const topbarInfo = {
+  dashboard: ['Dashboard Overview','BRFSS 2015 — CDC Diabetes Health Indicators · 253,680 records'],
+  analytics:  ['Clinical Analytics','Statistical breakdown of diabetes risk factors'],
+  predict:    ['Disease Prediction Engine','Random Forest model — trained on BRFSS 2015 data'],
+  chatbot:    ['Medical Assistant','Conversational clinical decision support'],
+  patients:   ['Patient Registry','Full BRFSS 2015 dataset — 253,680 records'],
+};
+function showPage(page, el) {
+  ['dashboard','analytics','predict','chatbot','patients'].forEach(p=>
+    document.getElementById(p+'Page').classList.toggle('hidden', p!==page)
+  );
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const [t,s] = topbarInfo[page];
+  document.getElementById('topbarTitle').textContent = t;
+  document.getElementById('topbarSub').textContent = s;
+  if(page==='analytics' && !analyticsInited){ loadAnalyticsCharts(); analyticsInited=true; }
+  if(page==='patients'){ currentPage=1; loadPatientsTable(); }
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats');
+    const d = await res.json();
+    document.getElementById('sv-total').textContent = d.total.toLocaleString();
+    document.getElementById('sv-pos').textContent   = d.positive.toLocaleString();
+    document.getElementById('sv-prev').textContent  = `↑ ${d.prevalence}% prevalence rate`;
+    document.getElementById('sv-bmi').textContent   = d.avg_bmi;
+    document.getElementById('sv-acc').textContent   = d.model_accuracy + '%';
+    document.getElementById('formAccuracy').textContent = d.model_accuracy + '%';
+    document.getElementById('an-bmi-d').textContent  = d.diabetic.avg_bmi;
+    document.getElementById('an-bmi-n').textContent  = `vs ${d.non_diabetic.avg_bmi} non-diabetic`;
+    document.getElementById('an-bp-d').textContent   = d.diabetic.high_bp_pct + '%';
+    document.getElementById('an-bp-n').textContent   = `vs ${d.non_diabetic.high_bp_pct}% non-diabetic`;
+    document.getElementById('an-chol-d').textContent = d.diabetic.high_chol_pct + '%';
+    document.getElementById('an-chol-n').textContent = `vs ${d.non_diabetic.high_chol_pct}% non-diabetic`;
+    document.getElementById('an-age-d').textContent  = d.diabetic.avg_age;
+    document.getElementById('an-age-n').textContent  = `vs ${d.non_diabetic.avg_age} non-diabetic`;
+  } catch(e){ console.error('Stats error:',e); }
+}
+
+const chartDefaults = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#8fa3c0',font:{size:12},boxWidth:12}}},
+  scales:{
+    x:{ticks:{color:'#4a6080'},grid:{color:'rgba(79,142,247,0.06)'}},
+    y:{ticks:{color:'#4a6080'},grid:{color:'rgba(79,142,247,0.06)'}}
+  }
+};
+
+async function initDashCharts() {
+  if(dashInited) return; dashInited=true;
+  try {
+    const res = await fetch('/api/chart-data');
+    const d = await res.json();
+    new Chart(document.getElementById('bmiChart'),{type:'bar',data:{labels:d.bmi.labels,datasets:[{label:'Non-Diabetic',data:d.bmi.negative,backgroundColor:'rgba(79,142,247,0.6)',borderRadius:6},{label:'Diabetic',data:d.bmi.positive,backgroundColor:'rgba(244,63,94,0.6)',borderRadius:6}]},options:{...chartDefaults}});
+    new Chart(document.getElementById('outcomeChart'),{type:'doughnut',data:{labels:[`Non-Diabetic (${d.outcome.negative.toLocaleString()})`,`Diabetic/Pre (${d.outcome.positive.toLocaleString()})`],datasets:[{data:[d.outcome.negative,d.outcome.positive],backgroundColor:['rgba(79,142,247,0.75)','rgba(244,63,94,0.75)'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom',labels:{color:'#8fa3c0',padding:14,font:{size:12},boxWidth:12}}}}});
+    new Chart(document.getElementById('ageChart'),{type:'bar',data:{labels:d.age_groups.labels,datasets:[{label:'Diabetes Rate %',data:d.age_groups.rate,backgroundColor:'rgba(244,63,94,0.65)',borderRadius:5,yAxisID:'y'},{label:'Avg BMI',data:d.age_groups.bmi,backgroundColor:'rgba(167,139,250,0.55)',borderRadius:5,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8fa3c0',font:{size:11},boxWidth:12}}},scales:{x:{ticks:{color:'#4a6080',font:{size:10},maxRotation:45},grid:{color:'rgba(79,142,247,0.06)'}},y:{ticks:{color:'#4a6080'},grid:{color:'rgba(79,142,247,0.06)'},title:{display:true,text:'Rate %',color:'#4a6080',font:{size:11}}},y1:{position:'right',ticks:{color:'#4a6080'},grid:{display:false},title:{display:true,text:'BMI',color:'#4a6080',font:{size:11}}}}}});
+    new Chart(document.getElementById('genhlthChart'),{type:'bar',data:{labels:d.genhlth.labels,datasets:[{label:'Non-Diabetic',data:d.genhlth.negative,backgroundColor:'rgba(34,197,94,0.6)',borderRadius:5},{label:'Diabetic',data:d.genhlth.positive,backgroundColor:'rgba(244,63,94,0.6)',borderRadius:5}]},options:{...chartDefaults}});
+    loadDashTable();
+  } catch(e){ console.error('Chart error:',e); }
+}
+
+async function loadAnalyticsCharts() {
+  try {
+    const res = await fetch('/api/chart-data');
+    const d = await res.json();
+    new Chart(document.getElementById('corrChart'),{type:'bar',data:{labels:d.correlation.labels,datasets:[{label:'Importance',data:d.correlation.values,backgroundColor:['rgba(79,142,247,0.8)','rgba(34,197,94,0.75)','rgba(167,139,250,0.75)','rgba(251,191,36,0.75)','rgba(244,63,94,0.75)','rgba(99,102,241,0.75)','rgba(236,72,153,0.75)','rgba(20,184,166,0.75)'],borderRadius:8}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#4a6080'},grid:{color:'rgba(79,142,247,0.06)'}},y:{ticks:{color:'#8fa3c0'},grid:{display:false}}}}});
+    new Chart(document.getElementById('riskChart'),{type:'bar',data:{labels:d.risk_factors.labels,datasets:[{label:'Diabetic %',data:d.risk_factors.positive,backgroundColor:'rgba(244,63,94,0.65)',borderRadius:5},{label:'Non-Diabetic %',data:d.risk_factors.negative,backgroundColor:'rgba(79,142,247,0.55)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8fa3c0',font:{size:12},boxWidth:12}}},scales:{x:{ticks:{color:'#4a6080',font:{size:10},maxRotation:30},grid:{color:'rgba(79,142,247,0.06)'}},y:{ticks:{color:'#4a6080'},grid:{color:'rgba(79,142,247,0.06)'}}}}});
+    new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:d.radar.labels,datasets:[{label:'Diabetic',data:d.radar.positive,backgroundColor:'rgba(244,63,94,0.15)',borderColor:'rgba(244,63,94,0.8)',pointBackgroundColor:'rgba(244,63,94,0.8)',borderWidth:2,pointRadius:4},{label:'Non-Diabetic',data:d.radar.negative,backgroundColor:'rgba(79,142,247,0.15)',borderColor:'rgba(79,142,247,0.8)',pointBackgroundColor:'rgba(79,142,247,0.8)',borderWidth:2,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8fa3c0',font:{size:13},boxWidth:12}}},scales:{r:{angleLines:{color:'rgba(79,142,247,0.1)'},grid:{color:'rgba(79,142,247,0.1)'},pointLabels:{color:'#8fa3c0',font:{size:12}},ticks:{color:'#4a6080',backdropColor:'transparent'}}}}});
+  } catch(e){ console.error('Analytics error:',e); }
+}
+
+function outcomeHtml(code, label) {
+  const cls = code===0?'badge-neg':(code===1?'badge-pre':'badge-pos');
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+async function loadDashTable() {
+  try {
+    const res = await fetch('/api/patients?page=1&per_page=15');
+    const d = await res.json();
+    document.getElementById('dashTableBody').innerHTML = d.patients.map(p=>`<tr><td>${p.id}</td><td>${p.age}</td><td>${p.sex}</td><td>${p.bmi}</td><td>${p.high_bp}</td><td>${p.high_chol}</td><td>${p.smoker}</td><td>${p.phys_activity}</td><td>${p.gen_hlth}</td><td>${outcomeHtml(p.outcome_code,p.outcome)}</td></tr>`).join('');
+  } catch(e){ console.error('Table error:',e); }
+}
+async function loadPatientsTable() {
+  try {
+    const res = await fetch(`/api/patients?page=${currentPage}&per_page=${PER_PAGE}`);
+    const d = await res.json();
+    document.getElementById('fullTableBody').innerHTML = d.patients.map(p=>`<tr><td>${p.id}</td><td>${p.age}</td><td>${p.sex}</td><td>${p.bmi}</td><td>${p.high_bp}</td><td>${p.high_chol}</td><td>${p.smoker}</td><td>${p.phys_activity}</td><td>${p.gen_hlth}</td><td>${outcomeHtml(p.outcome_code,p.outcome)}</td></tr>`).join('');
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${d.total_pages}`;
+    document.getElementById('prevBtn').disabled = currentPage <= 1;
+    document.getElementById('nextBtn').disabled = currentPage >= d.total_pages;
+  } catch(e){ console.error('Patients error:',e); }
+}
+function changePage(delta) { currentPage += delta; loadPatientsTable(); }
+
+async function runPrediction() {
+  const btn = document.getElementById('predictBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Analyzing...`;
+  const fields = ['HighBP','HighChol','CholCheck','BMI','Smoker','Stroke','HeartDiseaseorAttack','PhysActivity','Fruits','Veggies','HvyAlcoholConsump','AnyHealthcare','NoDocbcCost','GenHlth','MentHlth','PhysHlth','DiffWalk','Sex','Age','Education','Income'];
+  const payload = {};
+  fields.forEach(f => { payload[f] = parseFloat(document.getElementById('f_'+f).value); });
+  try {
+    const res = await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d = await res.json();
+    if(d.error){ alert('Prediction error: '+d.error); return; }
+    const card = document.getElementById('resultCard');
+    card.classList.remove('hidden');
+    setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),100);
+    const circle = document.getElementById('resultCircle');
+    circle.className = 'result-circle ' + d.risk_color;
+    document.getElementById('resultPct').textContent = d.probability + '%';
+    document.getElementById('resultTitle').textContent = d.result;
+    document.getElementById('resultSub').textContent = `Estimated diabetes probability: ${d.probability}% · Model accuracy: ${d.model_accuracy}%`;
+    const badge = document.getElementById('resultBadge');
+    badge.textContent = d.risk_level;
+    badge.className = 'result-badge ' + d.risk_color;
+    document.getElementById('factorsGrid').innerHTML = d.top_factors.map(f=>`<div class="factor-row"><div class="factor-name">${f.feature}</div><div class="factor-bar-wrap"><div class="factor-bar" style="width:${Math.min(f.importance*3,100)}%"></div></div><div class="factor-pct">${f.importance}%</div></div>`).join('');
+  } catch(e) {
+    alert('Request failed. Make sure Flask server is running.\n\n' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:white;fill:none;stroke-width:2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> Run Prediction`;
+  }
+}
+
+function handleChatKey(e) {
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+}
+function addMessage(role, text) {
+  const empty = document.getElementById('chatEmpty');
+  if(empty) empty.remove();
+  const wrap = document.getElementById('chatMessagesWrap');
+  const initials = role==='ai' ? 'AI' : (document.getElementById('sidebarAvatar').textContent||'U');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  div.innerHTML = `<div class="chat-avatar">${initials}</div><div class="chat-bubble">${text}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  addMessage('user', message);
+  input.value = '';
+
+  const typing = addMessage('ai', 'Typing...');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+
+    typing.querySelector('.chat-bubble').textContent = data.reply || "Error";
+
+  } catch (err) {
+    typing.querySelector('.chat-bubble').textContent = "Error connecting to AI";
+  }
+}
+
+const style = document.createElement('style');
+style.textContent = '@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
