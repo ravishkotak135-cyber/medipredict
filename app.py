@@ -1,3 +1,4 @@
+from groq import Groq
 from flask import Flask, render_template, jsonify, request, session
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -6,6 +7,7 @@ from sklearn.metrics import accuracy_score
 
 import os
 
+client = Groq(api_key="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")
 
 # ===== USER STORAGE =====
 USER_FILE = "users.csv"
@@ -61,6 +63,24 @@ print("  Ready! Visit http://localhost:5000\n")
 app = Flask(__name__)
 app.secret_key = 'medipredict_secret_key_2024'
 
+def get_ai_response(user_input):
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You are a medical assistant. Give short answers in 3-5 points. Do not diagnose."},
+                {
+                    "role": "user",
+                    "content": user_input
+                }
+            ],
+            model="llama-3.1-8b-instant",
+        )
+
+        return chat_completion.choices[0].message.content
+
+    except Exception as e:
+        print("🔥 ERROR:", e)   # 👈 THIS IS KEY
+        return str(e)          # 👈 SHOW ACTUAL ERROR IN UI
 
 @app.route('/')
 def index():
@@ -239,193 +259,14 @@ def predict():
         import traceback; traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
-import random
-
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.get_json()
-    message = data.get("message", "").lower()
+    user_message = data.get("message", "")
 
-    if len(message.split()) > 6 and not any(word in message for word in ["diabetes", "health", "bmi", "symptoms"]):
-        reply = "That seems like a general question. I specialize in medical assistance. Try asking about health or diabetes."
+    ai_reply = get_ai_response(user_message)
 
-    # Greeting
-    if any(word in message for word in ["hi", "hello", "hey"]):
-        reply = random.choice([
-            "Hello! How can I assist you today?",
-            "Hi there! Ask me anything about diabetes or health.",
-            "Hey! I'm your AI medical assistant."
-        ])
-
-    # Diabetes
-    elif any(word in message for word in ["diabetes", "sugar", "blood sugar"]):
-        reply = "Diabetes is a condition where the body cannot properly regulate blood sugar levels."
-
-    # Symptoms
-    elif any(word in message for word in ["symptoms", "signs", "feel"]):
-        reply = "Common symptoms include frequent urination, increased thirst, fatigue, and blurred vision."
-
-    # Prevention
-    elif any(word in message for word in ["prevent", "avoid", "reduce"]):
-        reply = "You can reduce the risk by exercising regularly, eating a balanced diet, and maintaining healthy weight."
-
-    # Diet
-    elif any(word in message for word in ["diet", "food", "eat"]):
-        reply = "A healthy diet includes low sugar, high fiber foods, vegetables, and whole grains."
-
-    # Exercise
-    elif any(word in message for word in ["exercise", "workout", "gym"]):
-        reply = "Regular physical activity helps control blood sugar and improves overall health."
-
-    # BMI
-    elif "bmi" in message:
-        reply = "BMI (Body Mass Index) measures body fat based on height and weight."
-
-    # Prediction
-    elif any(word in message for word in ["prediction", "result", "analysis"]):
-        reply = "Your prediction is based on factors like BMI, blood pressure, and lifestyle habits."
-
-    elif any(word in message for word in ["health", "healthy", "wellbeing"]):
-        reply = "Maintaining good health involves balanced diet, regular exercise, proper sleep, and stress management."
-
-    elif "sleep" in message:
-        reply = "Good sleep helps regulate hormones and improves overall health. Aim for 7-8 hours daily."
-
-    elif "water" in message:
-        reply = "Drinking enough water helps maintain blood sugar balance and overall body function."
-
-    elif "stress" in message:
-        reply = "Stress can increase blood sugar levels. Try meditation, exercise, and relaxation techniques."
-
-    elif "type 1" in message:
-        reply = "Type 1 diabetes occurs when the body does not produce insulin."
-
-    elif "type 2" in message:
-        reply = "Type 2 diabetes occurs when the body becomes resistant to insulin."
-
-    elif "insulin" in message:
-        reply = "Insulin is a hormone that helps regulate blood sugar levels."
-
-    elif "glucose" in message:
-        reply = "Glucose is the main source of energy but too much can be harmful."
-
-    elif "fasting sugar" in message:
-        reply = "Normal fasting blood sugar is usually between 70–100 mg/dL."
-
-    elif "thirst" in message:
-        reply = "Excessive thirst is a common symptom of high blood sugar."
-
-    elif "urination" in message:
-        reply = "Frequent urination can indicate high glucose levels."
-
-    elif "fatigue" in message:
-        reply = "Fatigue occurs when cells cannot use glucose efficiently."
-
-    elif "blurred vision" in message:
-        reply = "High sugar levels can affect eye lenses causing blurred vision."
-
-    elif "sugar" in message:
-        reply = "Limiting sugar intake helps control blood glucose levels."
-
-    elif "fruits" in message:
-        reply = "Fruits are healthy but should be consumed in moderation due to natural sugars."
-
-    elif "vegetables" in message:
-        reply = "Vegetables are rich in fiber and help control blood sugar."
-
-    elif "junk" in message:
-        reply = "Avoid junk food as it contains high sugar and unhealthy fats."
-
-    elif "carbs" in message:
-        reply = "Carbohydrates affect blood sugar levels, so they should be consumed wisely."
-
-    elif "walking" in message:
-        reply = "Walking daily for 30 minutes can significantly improve health."
-
-    elif "running" in message:
-        reply = "Running helps burn calories and improves insulin sensitivity."
-
-    elif "gym" in message:
-        reply = "Regular gym workouts help maintain weight and reduce diabetes risk."
-
-    elif "yoga" in message:
-        reply = "Yoga helps reduce stress and improve metabolic health."
-
-    elif "risk" in message:
-        reply = "Risk factors include obesity, genetics, lack of exercise, and unhealthy diet."
-
-    elif "family history" in message:
-        reply = "Having a family history increases diabetes risk."
-
-    elif "obesity" in message:
-        reply = "Obesity is one of the leading causes of type 2 diabetes."
-
-    elif "weight" in message:
-        reply = "Maintaining a healthy weight helps reduce diabetes risk."
-
-    elif "overweight" in message:
-        reply = "Being overweight increases insulin resistance."
-
-    elif "height" in message:
-        reply = "Height is used along with weight to calculate BMI."
-
-    elif "accuracy" in message:
-        reply = "The model accuracy represents how well the prediction matches real outcomes."
-
-    elif "model" in message:
-        reply = "The prediction uses a Random Forest machine learning model."
-
-    elif "factors" in message:
-        reply = "Factors like BMI, age, blood pressure, and lifestyle influence predictions."
-
-    elif "lifestyle" in message:
-        reply = "Healthy lifestyle includes balanced diet, exercise, and avoiding smoking."
-
-    elif "smoking" in message:
-        reply = "Smoking increases the risk of diabetes and heart disease."
-
-    elif "alcohol" in message:
-        reply = "Excess alcohol can increase blood sugar levels."
-
-    elif "routine" in message:
-        reply = "A healthy routine includes exercise, proper meals, and regular sleep."
-
-    elif "morning" in message:
-        reply = "Start your day with light exercise and a healthy breakfast."
-
-    elif "night" in message:
-        reply = "Avoid heavy meals at night and ensure proper sleep."
-
-    elif "who are you" in message:
-        reply = "I am your AI medical assistant designed to help with health insights."
-
-    elif "what can you do" in message:
-        reply = "I can explain diabetes, give health tips, and help you understand predictions."
-
-    elif "help" in message:
-        reply = "You can ask me about diabetes, symptoms, diet, exercise, or predictions."
-
-    elif any(word in message for word in ["mountain", "earth", "capital", "who", "what", "where", "when"]):
-        reply = "I specialize in medical and diabetes-related queries. For general knowledge questions, please ask something related to health."
-
-
-    else:
-
-        reply = random.choice([
-
-            "I’m focused on healthcare and diabetes. Try asking about symptoms, diet, or prediction results.",
-
-            "That’s outside my medical expertise. Ask me something related to health or diabetes.",
-
-            "I can help with medical insights and predictions. What would you like to know?"
-
-        ])
-
-
-    return jsonify({"reply": reply})
-
-
+    return jsonify({"reply": ai_reply})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

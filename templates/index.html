@@ -211,6 +211,32 @@ tr:hover td{background:rgba(79,142,247,0.03);}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+  .voice-controls {
+  display: flex;
+  gap: 10px;
+  padding: 10px 20px;
+}
+
+.voice-controls button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 16px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-controls button:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  transform: scale(1.05);
+}
+
+.voice-controls button:active {
+  transform: scale(0.95);
+}
 </style>
 </head>
 <body>
@@ -483,6 +509,12 @@ tr:hover td{background:rgba(79,142,247,0.03);}
               <p>Ask questions about diabetes risk factors, symptoms, lifestyle changes, or the dataset.</p>
             </div>
           </div>
+          <div class="voice-controls">
+  <button onclick="toggleVoice()" id="voiceBtn">🔊</button>
+  <button onclick="pauseVoice()" title="Pause">⏸</button>
+  <button onclick="resumeVoice()" title="Resume">▶</button>
+  <button onclick="stopVoice()" title="Stop">⏹</button>
+</div>
           <div class="chat-input-wrap">
             <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask about diabetes risk factors, symptoms, or patient data..." onkeydown="handleChatKey(event)"></textarea>
             <button class="chat-send-btn" onclick="sendChat()">
@@ -518,6 +550,7 @@ tr:hover td{background:rgba(79,142,247,0.03);}
 </div>
 
 <script>
+  let isVoiceOn = true;
 let authMode = 'login';
 let dashInited = false, analyticsInited = false;
 let currentPage = 1;
@@ -731,30 +764,72 @@ async function sendChat() {
   const message = input.value.trim();
   if (!message) return;
 
+  // Show user message
   addMessage('user', message);
   input.value = '';
 
-  const typing = addMessage('ai', 'Typing...');
+  // Show typing indicator
+  const typing = addMessage('ai', '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>');
 
   try {
-    const res = await fetch('/api/chat', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: message })
     });
 
-    const data = await res.json();
+   const data = await response.json();
 
-    typing.querySelector('.chat-bubble').textContent = data.reply || "Error";
+// Replace typing with AI response
+typing.querySelector('.chat-bubble').innerHTML =
+  data.reply.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
 
-  } catch (err) {
-    typing.querySelector('.chat-bubble').textContent = "Error connecting to AI";
-  }
+// 🔊 TEXT TO SPEECH
+if (isVoiceOn) {
+    const speech = new SpeechSynthesisUtterance(data.reply);
+    speech.lang = "en-US";
+    speech.rate = 1;
+    speech.pitch = 1;
+
+    window.speechSynthesis.cancel(); // stop previous voice
+    window.speechSynthesis.speak(speech);
 }
 
+  } catch (error) {
+    typing.querySelector('.chat-bubble').innerHTML = "Error: Unable to connect to AI.";
+  }
+}
 const style = document.createElement('style');
 style.textContent = '@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}';
 document.head.appendChild(style);
+  function toggleVoice() {
+    isVoiceOn = !isVoiceOn;
+
+    const btn = document.getElementById("voiceBtn");
+
+    if (!isVoiceOn) {
+        window.speechSynthesis.cancel();
+        btn.innerText = "🔇";
+        btn.style.color = "#ef4444";
+    } else {
+        btn.innerText = "🔊";
+        btn.style.color = "#22c55e";
+    }
+}
+
+function pauseVoice() {
+    window.speechSynthesis.pause();
+}
+
+function resumeVoice() {
+    window.speechSynthesis.resume();
+}
+
+function stopVoice() {
+    window.speechSynthesis.cancel();
+}
 </script>
 </body>
 </html>
