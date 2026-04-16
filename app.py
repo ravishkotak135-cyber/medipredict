@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 
 import os
 
-client = Groq(api_key="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")
+client = Groq(api_key=os.getenv("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"))
 
 # ===== USER STORAGE =====
 USER_FILE = "users.csv"
