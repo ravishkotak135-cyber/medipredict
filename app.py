@@ -81,11 +81,18 @@ app.secret_key = 'medipredict_secret_key_2024'
 
 def get_ai_response(user_input):
     health_keywords = [
-        "diabetes", "health", "blood", "sugar", "bp", "bmi",
-        "exercise", "diet", "symptoms", "disease", "insulin"
+        "diabetes", "health", "medical", "blood", "sugar", "bp", "bmi",
+        "exercise", "diet", "symptom", "disease", "insulin",
+        "heart", "cholesterol", "pressure", "glucose", "patient"
     ]
 
-    if not any(word in user_input.lower() for word in health_keywords):
+    user_input_lower = user_input.lower()
+
+    is_health_related = any(keyword in user_input_lower for keyword in health_keywords)
+
+    non_health_words = ["who", "movie", "actor", "cricket", "player", "code", "python"]
+
+    if not is_health_related or any(word in user_input_lower for word in non_health_words):
         return "I am designed to answer only health-related queries."
     try:
         chat_completion = client.chat.completions.create(
