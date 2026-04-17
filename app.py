@@ -80,10 +80,23 @@ app = Flask(__name__)
 app.secret_key = 'medipredict_secret_key_2024'
 
 def get_ai_response(user_input):
+    health_keywords = [
+        "diabetes", "health", "blood", "sugar", "bp", "bmi",
+        "exercise", "diet", "symptoms", "disease", "insulin"
+    ]
+
+    if not any(word in user_input.lower() for word in health_keywords):
+        return "I am designed to answer only health-related queries."
     try:
         chat_completion = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are a medical assistant. Give short answers in 3-5 points. Do not diagnose."},
+                {"role": "system", "content":
+                    "You are a healthcare assistant specialized in diabetes and general health. "
+                    "Only answer questions related to diabetes, health, lifestyle, symptoms, or prevention. "
+                    "If the question is unrelated (like technology, movies, coding, etc.), politely refuse by saying: "
+                    "'I am designed to answer only health-related queries.' "
+                    "Give short answers in 3-5 bullet points. Do not diagnose or give medical prescriptions."
+                 },
                 {
                     "role": "user",
                     "content": user_input
