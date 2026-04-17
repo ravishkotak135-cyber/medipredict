@@ -1,3 +1,4 @@
+import sqlite3
 from groq import Groq
 from flask import Flask, render_template, jsonify, request, session
 import pandas as pd
@@ -6,14 +7,29 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 import os
+DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ===== USER STORAGE =====
-USER_FILE = "users.csv"
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-if not os.path.exists(USER_FILE):
-    pd.DataFrame(columns=["name", "email", "password", "role"]).to_csv(USER_FILE, index=False)
+# Create table if not exists
+conn = get_db_connection()
+conn.execute('''
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT UNIQUE,
+    password TEXT,
+    role TEXT
+)
+''')
+conn.commit()
+conn.close()
 
 print("=" * 60)
 print("  MediPredict — Loading BRFSS 2015 Diabetes Dataset")
@@ -95,24 +111,29 @@ def signup():
     password = data.get('password')
     role = data.get('role')
 
-    df_users = pd.read_csv(USER_FILE)
+    conn = get_db_connection()
 
-    # Check if user already exists
-    if email in df_users['email'].values:
+    # Check if user exists
+    existing = conn.execute(
+        'SELECT * FROM users WHERE email = ?',
+        (email,)
+    ).fetchone()
+
+    if existing:
+        conn.close()
         return jsonify({'success': False, 'message': 'User already exists'})
 
-    # Create new user
-    new_user = pd.DataFrame([{
-        "name": name,
-        "email": email,
-        "password": password,
-        "role": role
-    }])
+    # Insert new user
+    conn.execute(
+        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+        (name, email, password, role)
+    )
 
-    df_users = pd.concat([df_users, new_user], ignore_index=True)
-    df_users.to_csv(USER_FILE, index=False)
+    conn.commit()
+    conn.close()
 
     return jsonify({'success': True})
+
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -121,17 +142,19 @@ def login():
     email = data.get('email')
     password = data.get('password')
 
-    df_users = pd.read_csv(USER_FILE)
+    conn = get_db_connection()
 
-    user = df_users[
-        (df_users['email'] == email) &
-        (df_users['password'] == password)
-    ]
+    user = conn.execute(
+        'SELECT * FROM users WHERE email = ? AND password = ?',
+        (email, password)
+    ).fetchone()
 
-    if user.empty:
+    conn.close()
+
+    if not user:
         return jsonify({'success': False, 'message': 'Invalid credentials'})
 
-    user_data = user.iloc[0].to_dict()
+    user_data = dict(user)
     session['user'] = user_data
 
     return jsonify({'success': True, 'user': user_data})
