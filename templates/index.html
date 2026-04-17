@@ -462,8 +462,12 @@ tr:hover td{background:rgba(79,142,247,0.03);}
             <div class="form-section-title">General Well-being</div>
             <div class="form-grid">
               <div class="form-field"><label>General Health (1=Excellent, 5=Poor)</label><select id="f_GenHlth"><option value="1">1 — Excellent</option><option value="2">2 — Very Good</option><option value="3" selected>3 — Good</option><option value="4">4 — Fair</option><option value="5">5 — Poor</option></select></div>
-              <div class="form-field"><label>Mental Health Poor Days (past 30)</label><input type="number" id="f_MentHlth" value="0" min="0" max="30" oninput="this.value = Math.min(Math.max(this.value, 0), 30)"></div>
-              <div class="form-field"><label>Physical Health Poor Days (past 30)</label><input type="number" id="f_PhysHlth" value="0" min="0" max="30" oninput="this.value = Math.min(Math.max(this.value, 0), 30)"></div>
+              <div class="form-field"><label>Mental Health Poor Days (past 30)</label><input type="number" id="f_MentHlth" name="MentHlth"
+value="0" min="0" max="30"
+oninput="this.value = Math.min(Math.max(Number(this.value), 0), 30)"></div>
+              <div class="form-field"><label>Physical Health Poor Days (past 30)</label><input type="number" id="f_PhysHlth" name="PhysHlth"
+value="0" min="0" max="30"
+oninput="this.value = Math.min(Math.max(Number(this.value), 0), 30)"></div>
             </div>
             <div class="form-section-title">Demographics</div>
             <div class="form-grid">
