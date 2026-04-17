@@ -238,7 +238,13 @@ def predict():
         return jsonify({'error': 'Unauthorized'}), 401
     try:
         data = request.get_json()
-        input_df = pd.DataFrame([{col: float(data.get(col, 0)) for col in FEATURE_COLS}])[FEATURE_COLS]
+        input_data = {col: float(data.get(col, 0)) for col in FEATURE_COLS}
+
+        # validation
+        input_data['MentHlth'] = max(0, min(input_data['MentHlth'], 30))
+        input_data['PhysHlth'] = max(0, min(input_data['PhysHlth'], 30))
+
+        input_df = pd.DataFrame([input_data])[FEATURE_COLS]
         prediction = int(model.predict(input_df)[0])
         probability = round(float(model.predict_proba(input_df)[0][1]) * 100, 1)
 
